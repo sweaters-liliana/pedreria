@@ -1,1 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Maestro de Efectos JMVN</title>
+    <style>
+        :root {
+            --accent: #ff0055;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text-main: #eee;
+            --text-muted: #888;
+            --hover-bg: #251218;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            padding: 10px 0;
+            z-index: 10;
+            border-bottom: 1px solid #222;
+            margin-bottom: 20px;
+        }
+
+        .category-label {
+            font-size: 0.7rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 25px 0 12px 0;
+            display: flex;
+            align-items: center;
+            font-weight: 800;
+        }
+
+        .category-label::after {
+            content: "";
+            height: 1px;
+            background: #333;
+            flex-grow: 1;
+            margin-left: 15px;
+        }
+
+        .effects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .effect-card {
+            background: var(--card-bg);
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .effect-card:hover {
+            border-color: #444;
+            background: var(--hover-bg);
+            transform: scale(1.02);
+        }
+
+        .effect-card.active {
+            border-color: var(--accent);
+            background: rgba(255, 0, 85, 0.1);
+        }
+
+        .icon { font-size: 1.5rem; margin-bottom: 8px; }
+        .name { font-weight: 600; font-size: 0.8rem; margin-bottom: 4px; display: block; }
+        .desc { font-size: 0.65rem; color: var(--text-muted); line-height: 1.1; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h3 style="margin:0; font-size: 1rem;">Efectos de Pedrería JMVN</h3>
+    </div>
+
+    <span class="category-label">Originales & Fotos</span>
+    <div class="effects-grid">
+        <div class="effect-card active" onclick="selectEffect(this, 'fill')"><span class="icon">⬛</span><span class="name">Sólido</span><span class="desc">Relleno denso.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'outline')"><span class="icon">⬜</span><span class="name">Contorno</span><span class="desc">Silueta fina.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'shatter')"><span class="icon">💥</span><span class="name">Shatter</span><span class="desc">Base rota Versace.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'melting')"><span class="icon">💧</span><span class="name">Melting</span><span class="desc">Goteo vertical.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'fading')"><span class="icon">🌫️</span><span class="name">Fading</span><span class="desc">Degradado suave.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'negative_box')"><span class="icon">🔳</span><span class="name">Negative</span><span class="desc">Texto hueco.</span></div>
+    </div>
+
+    <span class="category-label">Urbano & Streetwear</span>
+    <div class="effects-grid">
+        <div class="effect-card" onclick="selectEffect(this, 'graffiti')"><span class="icon">🎨</span><span class="name">Graffiti</span><span class="desc">Bordes chorreados.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'barbed_wire')"><span class="icon">⛓️</span><span class="name">Alambre</span><span class="desc">Entrelazado espinoso.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'fire')"><span class="icon">🔥</span><span class="name">Infierno</span><span class="desc">Llamas en la base.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'camo')"><span class="icon">🌿</span><span class="name">Camo</span><span class="desc">Manchas militares.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'lightning')"><span class="icon">⚡</span><span class="name">Rayo</span><span class="desc">Corte en zigzag.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'brick')"><span class="icon">🧱</span><span class="name">Ladrillo</span><span class="desc">Patrón trabado.</span></div>
+    </div>
+
+    <span class="category-label">Lujo Extremo</span>
+    <div class="effects-grid">
+        <div class="effect-card" onclick="selectEffect(this, 'pavé')"><span class="icon">💍</span><span class="name">Pavé Real</span><span class="desc">Piedras sin espacios.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'baguette')"><span class="icon">💎</span><span class="name">Baguette</span><span class="desc">Piedras alargadas.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'halo')"><span class="icon">⭕</span><span class="name">Halo</span><span class="desc">Brillo perimetral.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'gold_dust')"><span class="icon">✨</span><span class="name">Oro Líquido</span><span class="desc">Dispersión aleatoria.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'royal_cross')"><span class="icon">✝️</span><span class="name">Gótico</span><span class="desc">Puntas afiladas.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'tiara')"><span class="icon">👑</span><span class="name">Tiara</span><span class="desc">Corona superior.</span></div>
+    </div>
+
+    <span class="category-label">Geométrico & Tech</span>
+    <div class="effects-grid">
+        <div class="effect-card" onclick="selectEffect(this, 'matrix')"><span class="icon">📟</span><span class="name">Matrix</span><span class="desc">Caída de códigos.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'vortex')"><span class="icon">🌀</span><span class="name">Vórtice</span><span class="desc">Espiral al centro.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'dna')"><span class="icon">🧬</span><span class="name">Hélice</span><span class="desc">Estructura doble.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'circuit')"><span class="icon">🔌</span><span class="name">Circuito</span><span class="desc">Líneas de 90°.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'fractal')"><span class="icon">❄️</span><span class="name">Fractal</span><span class="desc">Simetría compleja.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'scanline')"><span class="icon">🚥</span><span class="name">Scanline</span><span class="desc">Rayas horizontales.</span></div>
+    </div>
+
+    <span class="category-label">Conceptuales</span>
+    <div class="effects-grid">
+        <div class="effect-card" onclick="selectEffect(this, 'snake')"><span class="icon">🐍</span><span class="name">Escamas</span><span class="desc">Piel de serpiente.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'ice')"><span class="icon">🧊</span><span class="name">Congelado</span><span class="desc">Efecto escarcha.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'galaxy')"><span class="icon">☄️</span><span class="name">Nebulosa</span><span class="desc">Cúmulos de piedras.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'blood')"><span class="icon">🩸</span><span class="name">Drip</span><span class="desc">Sangrado denso.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'spider')"><span class="icon">🕷️</span><span class="name">Web</span><span class="desc">Telaraña interna.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'heartbeat')"><span class="icon">💓</span><span class="name">Pulso</span><span class="desc">Ondas de ritmo.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'stitching')"><span class="icon">🪡</span><span class="name">Costura</span><span class="desc">Piedras tipo hilo.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'sand')"><span class="icon">⏳</span><span class="name">Reloj Arena</span><span class="desc">Acumulación base.</span></div>
+    </div>
+
+    <span class="category-label">Retro & Funky</span>
+    <div class="effects-grid">
+        <div class="effect-card" onclick="selectEffect(this, 'disco')"><span class="icon">🪩</span><span class="name">Espejo</span><span class="desc">Reflejos cuadrados.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'neon')"><span class="icon">🌈</span><span class="name">Neon Edge</span><span class="desc">Borde multicolor.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'zebra_v2')"><span class="icon">🦓</span><span class="name">Safari</span><span class="desc">Rayas orgánicas.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'peace')"><span class="icon">✌️</span><span class="name">Hippie</span><span class="desc">Flores de piedras.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'target')"><span class="icon">🎯</span><span class="name">Diana</span><span class="desc">Círculos concéntricos.</span></div>
+        <div class="effect-card" onclick="selectEffect(this, 'pixel_invader')"><span class="icon">👾</span><span class="name">8-Bit</span><span class="desc">Pixelado agresivo.</span></div>
+    </div>
+
+    <script>
+        function selectEffect(element, effectCode) {
+            document.querySelectorAll('.effect-card').forEach(card => card.classList.remove('active'));
+            element.classList.add('active');
+            window.parent.postMessage({ action: 'applyEffect', effectName: effectCode }, '*');
+        }
+    </script>
+</body>
+</html>
 
