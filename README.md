@@ -1,2 +1,1 @@
-# pedreria
-Generador de plantillas de corte para pedrería 
+https://sweaters-liliana.github.io/pedreria/
