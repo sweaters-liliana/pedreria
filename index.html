@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JMVN - Generador Pro V3.5 (Full Effects)</title>
+    <title>JMVN - Generador Pro V3.6 (Full Effects & Touch Zoom)</title>
     <style>
         :root { --accent: #ff0055; --bg: #111; --text: #eee; --panel: #222; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; touch-action: none; }
@@ -342,7 +342,7 @@
 
     <div class="footer">
         Desarrollado por <strong>JESÚS VALLEJO</strong><br>
-        <span class="gemini-tag">POWERED BY GEMINI 3 PRO - V3.5 (FULL EFFECTS ENGINE)</span>
+        <span class="gemini-tag">POWERED BY GEMINI 3 PRO - V3.6 (FULL EFFECTS & TOUCH ZOOM)</span>
         <div style="margin-top:10px; font-style:italic; font-size:0.75rem">
             HERRAMIENTA DE USO EXCLUSIVO PARA EMPLEADOS DE <b>VIVA ROUSS</b> Y <b>MISS ROUSS</b>.
         </div>
@@ -501,14 +501,6 @@
             ctx.fillStyle = "white"; // Pedrería siempre mapea blanco/colores claros
             ctx.strokeStyle = "white";
 
-            // Helper para obtener contornos (útil en patrones)
-            const setupClip = () => {
-                ctx.beginPath();
-                // Truco para hacer clip de texto:
-                // No hay una API directa path-from-text en Canvas estándar (solo SVG)
-                // Usamos 'destination-in' o composite modes para patrones
-            };
-
             switch (effect) {
                 // --- BÁSICOS ---
                 case 'fill':
@@ -524,6 +516,42 @@
                         const m = ctx.measureText(text);
                         ctx.lineWidth = size * 0.02;
                         ctx.strokeRect(x - m.width/2 - 20, y - size/2 - 20, m.width + 40, size + 40);
+                    }
+                    break;
+
+                // --- NUEVO EFECTO: DISPERSIÓN (Goteo complejo de las imágenes) ---
+                case 'dispersion':
+                    // 1. Dibujar el texto base
+                    ctx.fillText(text, x, y);
+                    
+                    // 2. Generar efecto de goteo en la parte inferior
+                    const metrics = ctx.measureText(text);
+                    const textWidth = metrics.width;
+                    const textHeight = size * 0.8; // Aprox
+                    const startX = x - textWidth / 2;
+                    const bottomY = y + textHeight / 2;
+                    
+                    const numDrops = textWidth / (size * 0.1); // Densidad de gotas
+                    const maxDropLength = size * (intensity / 20); // Largo basado en intensidad
+                    
+                    for (let i = 0; i <= numDrops; i++) {
+                        const currentX = startX + (i * (textWidth / numDrops));
+                        
+                        // Aleatoriedad en la longitud de cada estela de goteo
+                        const dropLength = Math.random() * maxDropLength + (size * 0.5);
+                        const dropSize = size * 0.06; // Tamaño base de las gotas
+
+                        // Crear la estela de puntos cayendo
+                        for (let dy = 0; dy < dropLength; dy += dropSize * 1.5) {
+                             // Dispersión horizontal aleatoria a medida que cae
+                            const scatterX = (Math.random() - 0.5) * (dy * 0.2);
+                            // El tamaño de la gota se reduce al caer
+                            const currentDropSize = dropSize * (1 - (dy / dropLength) * 0.6);
+                            
+                            ctx.beginPath();
+                            ctx.arc(currentX + scatterX, bottomY + dy, currentDropSize, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
                     }
                     break;
 
@@ -545,14 +573,14 @@
                     ctx.restore();
                     break;
 
-                case 'melting': // Goteo
+                case 'melting': // Goteo simple
                 case 'blood': // Drip
                     ctx.fillText(text, x, y);
                     const drops = 15 * (intensity/20);
                     const widthApprox = text.length * (size * 0.6);
-                    const startX = x - widthApprox/2;
+                    const startXDrop = x - widthApprox/2;
                     for(let i=0; i<drops; i++) {
-                        const dx = startX + Math.random() * widthApprox;
+                        const dx = startXDrop + Math.random() * widthApprox;
                         const dy = y + size/5;
                         const len = Math.random() * size * 1.5;
                         ctx.beginPath();
@@ -685,8 +713,8 @@
                 case 'halo':
                     ctx.fillText(text, x, y);
                     ctx.beginPath();
-                    const metrics = ctx.measureText(text);
-                    ctx.arc(x, y, metrics.width/2 + 20, 0, Math.PI * 2);
+                    const metricsHalo = ctx.measureText(text);
+                    ctx.arc(x, y, metricsHalo.width/2 + 20, 0, Math.PI * 2);
                     ctx.lineWidth = size * 0.05;
                     ctx.stroke();
                     break;
@@ -725,16 +753,16 @@
             const size = parseInt(document.getElementById('rngTxtSize').value);
             const scatter = parseInt(document.getElementById('rngScatter').value);
 
-            // Ajustar canvas
-            cvs.width = Math.max(600, text.length * (size * 0.6) + 100);
-            cvs.height = size * 2.5;
+            // Ajustar canvas para acomodar efectos grandes como Dispersión
+            cvs.width = Math.max(600, text.length * (size * 0.7) + 100);
+            cvs.height = size * 3.5; 
 
             // Fondo "Camiseta"
             ctx.fillStyle = "black";
             ctx.fillRect(0,0,cvs.width, cvs.height);
 
             const cx = cvs.width / 2;
-            const cy = cvs.height / 2;
+            const cy = cvs.height / 2.5; // Subir un poco el texto base
 
             renderAdvancedEffect(ctx, text, cx, cy, size, fontName, currentTextEffect, scatter);
         }
@@ -776,7 +804,7 @@
             tCtx.fillStyle = "black"; tCtx.fillRect(0,0,tempCvs.width, tempCvs.height); // Fondo negro
             
             // Renderizamos el efecto en blanco sobre negro
-            renderAdvancedEffect(tCtx, text, procCanvas.width/2, procCanvas.height/2, size, fontName, currentTextEffect, scatter);
+            renderAdvancedEffect(tCtx, text, procCanvas.width/2, procCanvas.height/2.5, size, fontName, currentTextEffect, scatter);
             
             // Ahora copiamos al canvas de procesamiento e invertimos
             const idata = tCtx.getImageData(0,0, tempCvs.width, tempCvs.height);
@@ -918,10 +946,13 @@
             document.getElementById('svgContent').innerHTML = svg;
         }
 
-        // --- EDITOR CANVAS ---
+        // --- EDITOR CANVAS (ZOOM TÁCTIL MEJORADO) ---
         const editorCanvas = document.getElementById('editorCanvas');
         const ctxEdit = editorCanvas.getContext('2d');
-        let editTool = 'delete'; let selectedPointIdx = -1; let editorScale = 1; let editorOffsetX = 0; let editorOffsetY = 0; let isDragging = false; let lastMouse = {x:0, y:0};
+        let editTool = 'delete'; let selectedPointIdx = -1; let editorScale = 1; let editorOffsetX = 0; let editorOffsetY = 0; 
+        let isDragging = false; let lastMouse = {x:0, y:0};
+        // Variables para control de zoom táctil
+        let initialPinchDistance = 0; let isPinching = false;
 
         function openEditor() {
             backupPoints = JSON.parse(JSON.stringify(globalPoints)); 
@@ -952,6 +983,8 @@
         }
 
         function screenToWorld(sx, sy) { return { x: (sx - editorOffsetX) / editorScale, y: (sy - editorOffsetY) / editorScale }; }
+        
+        // Eventos de Ratón (Pan y Zoom con rueda)
         editorCanvas.addEventListener('mousedown', startPan); editorCanvas.addEventListener('mousemove', movePan); editorCanvas.addEventListener('mouseup', endPan);
         editorCanvas.addEventListener('wheel', (e) => {
             e.preventDefault(); const s = (e.deltaY < 0) ? 1.1 : 0.9;
@@ -961,18 +994,44 @@
             editorScale *= s; drawEditorLoop();
         });
         
-        editorCanvas.addEventListener('touchstart', (e)=>{ if(e.touches.length === 1) startPan(e.touches[0]); });
-        editorCanvas.addEventListener('touchmove', (e)=>{ e.preventDefault(); if(e.touches.length === 1) movePan(e.touches[0]); });
-        editorCanvas.addEventListener('touchend', (e)=>{ endPan(e.changedTouches[0]); });
+        // Eventos Táctiles (Pan y Zoom con pellizco)
+        editorCanvas.addEventListener('touchstart', (e)=>{ 
+            if(e.touches.length === 1) { startPan(e.touches[0]); }
+            else if (e.touches.length === 2) {
+                isPinching = true;
+                initialPinchDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            }
+        });
+        editorCanvas.addEventListener('touchmove', (e)=>{ 
+            e.preventDefault(); 
+            if(e.touches.length === 1 && !isPinching) { movePan(e.touches[0]); }
+            else if (isPinching && e.touches.length === 2) {
+                const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                const s = currentDistance / initialPinchDistance;
+                const rect = editorCanvas.getBoundingClientRect();
+                // Punto medio del pellizco para hacer zoom desde ahí
+                const mx = (e.touches[0].pageX + e.touches[1].pageX) / 2 - rect.left;
+                const my = (e.touches[0].pageY + e.touches[1].pageY) / 2 - rect.top;
+                editorOffsetX = mx - (mx - editorOffsetX) * s;
+                editorOffsetY = my - (my - editorOffsetY) * s;
+                editorScale *= s;
+                initialPinchDistance = currentDistance; // Actualizar para el siguiente frame
+                drawEditorLoop();
+            }
+        });
+        editorCanvas.addEventListener('touchend', (e)=>{ 
+            if (isPinching && e.touches.length < 2) { isPinching = false; }
+            else if (e.touches.length === 0) { endPan(e.changedTouches[0]); }
+        });
 
         let startClickTime = 0; let didMove = false;
-        function startPan(e) { isDragging = true; didMove = false; startClickTime = Date.now(); const rect = editorCanvas.getBoundingClientRect(); lastMouse = { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
-        function movePan(e) { if (!isDragging) return; const rect = editorCanvas.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; if (Math.abs(x - lastMouse.x) > 2 || Math.abs(y - lastMouse.y) > 2) didMove = true; editorOffsetX += (x - lastMouse.x); editorOffsetY += (y - lastMouse.y); lastMouse = {x, y}; drawEditorLoop(); }
+        function startPan(e) { isDragging = true; didMove = false; startClickTime = Date.now(); const rect = editorCanvas.getBoundingClientRect(); lastMouse = { x: (e.clientX || e.pageX) - rect.left, y: (e.clientY || e.pageY) - rect.top }; }
+        function movePan(e) { if (!isDragging) return; const rect = editorCanvas.getBoundingClientRect(); const x = (e.clientX || e.pageX) - rect.left; const y = (e.clientY || e.pageY) - rect.top; if (Math.abs(x - lastMouse.x) > 2 || Math.abs(y - lastMouse.y) > 2) didMove = true; editorOffsetX += (x - lastMouse.x); editorOffsetY += (y - lastMouse.y); lastMouse = {x, y}; drawEditorLoop(); }
         function endPan(e) { isDragging = false; const timeDiff = Date.now() - startClickTime; if (timeDiff < 300 && !didMove) { const rect = editorCanvas.getBoundingClientRect(); handleToolClick((e.clientX || e.pageX) - rect.left, (e.clientY || e.pageY) - rect.top); } }
 
         function handleToolClick(sx, sy) {
             const wPos = screenToWorld(sx, sy); const r = parseFloat(document.getElementById('radius').value);
-            let hitIdx = -1; let minDist = r * 2.5;
+            let hitIdx = -1; let minDist = r * 2.5; // Tolerancia de clic basada en el radio
             for(let i=0; i<globalPoints.length; i++) { const d = Math.hypot(globalPoints[i].x - wPos.x, globalPoints[i].y - wPos.y); if (d < minDist) { minDist = d; hitIdx = i; } }
             if (editTool === 'delete' && hitIdx !== -1) { globalPoints.splice(hitIdx, 1); manualEditsMade = true; } 
             else if (editTool === 'add' && hitIdx === -1) { globalPoints.push({x: wPos.x, y: wPos.y}); manualEditsMade = true; } 
