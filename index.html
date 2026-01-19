@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JMVN - Generador Pro V4.0 (Full Effects & Global Zoom)</title>
+    <title>JMVN - Generador Pro V3.6 (Full Effects & Touch Zoom)</title>
     <style>
         :root { --accent: #ff0055; --bg: #111; --text: #eee; --panel: #222; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; touch-action: none; }
@@ -38,20 +38,8 @@
         .dimensions-display { text-align: center; color: #00E676; font-family: monospace; font-size: 1.1rem; margin-top: 10px; }
 
         /* Área de SVG / Canvas */
-        #visualWrapper { 
-            background: #fff; border-radius: 8px; height: 650px; position: relative; overflow: hidden; 
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; 
-            cursor: grab; /* Cursor para indicar zoom/pan */
-            touch-action: none;
-        }
-        #visualWrapper:active { cursor: grabbing; }
-
-        #svgContent { 
-            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; 
-            transform-origin: center center;
-            transition: transform 0.1s linear;
-            pointer-events: none; /* Dejar pasar eventos al wrapper */
-        }
+        #visualWrapper { background: #fff; border-radius: 8px; height: 650px; position: relative; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; }
+        #svgContent { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         
         /* --- MODO EDICIÓN (OVERLAY) --- */
         #editorOverlay { 
@@ -130,7 +118,14 @@
         .effects-container { text-align: left; }
         .effects-label { font-size: 1.1rem; color: var(--accent); font-weight: bold; margin-bottom: 10px; display: block; }
         
-        #effectsFrame { width: 100%; height: 380px; border: 2px solid #444; border-radius: 8px; background: #111; }
+        /* IFRAME CONTAINER PARA EFECTOS */
+        #effectsFrame {
+            width: 100%;
+            height: 380px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: #111;
+        }
 
         .font-item { display: flex; justify-content: space-between; background: #333; padding: 10px; margin-bottom: 5px; border-radius: 5px; align-items: center; }
 
@@ -185,16 +180,11 @@
             </div>
 
             <div class="control-group">
-                <label>3. Distribución (Algoritmo)</label>
+                <label>3. Distribución</label>
                 <select id="mode" class="param-input">
                     <option value="adaptive">Trazo Adaptativo (Curvas)</option>
                     <option value="honeycomb">Panal Orgánico</option>
                     <option value="grid">Ladrillo Recto</option>
-                    <option value="jitter">Stochastic Jitter (Natural)</option>
-                    <option value="wave">Onda Sinusoidal (Dinámico)</option>
-                    <option value="diamond">Diamante 45° (Romboidal)</option>
-                    <option value="radial">Explosión Radial (Centrado)</option>
-                    <option value="cross">Cross-Stitch (Punto Cruz)</option>
                 </select>
             </div>
 
@@ -209,7 +199,7 @@
             </div>
 
             <div class="control-group">
-                <label>Ángulo/Fase: <span id="angleVal" class="val">0</span>°</label>
+                <label>Ángulo: <span id="angleVal" class="val">0</span>°</label>
                 <input type="range" id="angle" class="param-input" min="-45" max="45" value="0">
             </div>
 
@@ -225,7 +215,7 @@
 
         <div id="visualWrapper">
             <div id="svgContent">
-                <div style="color:#bbb; text-align:center">Usa "Crear Texto Mágico" o sube imagen<br>para comenzar.<br><br><small>(Zoom y Pan habilitado aquí)</small></div>
+                <div style="color:#bbb; text-align:center">Usa "Crear Texto Mágico" o sube imagen<br>para comenzar.</div>
             </div>
 
             <div id="editorOverlay">
@@ -255,255 +245,689 @@
 
     <div id="galleryModal" class="modal-backdrop">
         <div class="modal-content">
-            <div class="modal-header"><h3 style="margin:0">Diseños Guardados</h3><button class="close-btn" onclick="closeModal('galleryModal')">×</button></div>
+            <div class="modal-header">
+                <h3 style="margin:0">Diseños Guardados</h3>
+                <button class="close-btn" onclick="closeModal('galleryModal')">×</button>
+            </div>
             <div id="galleryList" class="project-list"></div>
         </div>
     </div>
 
     <div id="fontManagerModal" class="modal-backdrop">
         <div class="modal-content">
-            <div class="modal-header"><h3 style="margin:0">Gestor de Fuentes</h3><button class="close-btn" onclick="closeModal('fontManagerModal')">×</button></div>
-            <div style="text-align:left; margin-bottom:20px; background:#333; padding:15px; border-radius:8px;">
-                <label>Nombre</label><input type="text" id="newFontName" placeholder="Ej: Versace Font">
-                <label style="margin-top:10px;">URL</label><input type="text" id="newFontUrl" placeholder="https://...">
-                <button onclick="saveNewFont()" style="margin-top:10px; background:#00E676; color:black;">+ Agregar</button>
+            <div class="modal-header">
+                <h3 style="margin:0">Gestor de Fuentes</h3>
+                <button class="close-btn" onclick="closeModal('fontManagerModal')">×</button>
             </div>
-            <h4 style="text-align:left">Fuentes:</h4><div id="fontListDisplay" class="project-list" style="max-height:200px; overflow-y:auto;"></div>
+            <div style="text-align:left; margin-bottom:20px; background:#333; padding:15px; border-radius:8px;">
+                <label>Nombre de la Fuente</label>
+                <input type="text" id="newFontName" placeholder="Ej: Versace Font">
+                <label style="margin-top:10px;">URL del archivo (.ttf, .otf o Google Font URL)</label>
+                <input type="text" id="newFontUrl" placeholder="https://...">
+                <button onclick="saveNewFont()" style="margin-top:10px; background:#00E676; color:black;">+ Agregar a Base de Datos</button>
+            </div>
+            <h4 style="text-align:left">Fuentes Disponibles:</h4>
+            <div id="fontListDisplay" class="project-list" style="max-height:200px; overflow-y:auto;"></div>
         </div>
     </div>
 
     <div id="textToolModal" class="modal-backdrop">
         <div class="modal-content" style="max-width:900px;">
-            <div class="modal-header"><h3 style="margin:0">✨ Diseñador de Texto Mágico</h3><button class="close-btn" onclick="closeModal('textToolModal')">×</button></div>
-            <div class="text-preview-area"><canvas id="textPreviewCanvas" height="160"></canvas></div>
-            <div class="text-inputs-row">
-                <div><label>Texto:</label><textarea id="txtString" rows="1" style="resize:none; font-size:1.1rem; letter-spacing:1px;" oninput="updateTextPreview()">QUEEN</textarea></div>
-                <div><label>Fuente:</label><select id="txtFontFamily" onchange="updateTextPreview()"><option value="Arial">Arial</option><option value="Times New Roman">Times New Roman</option><option value="Impact">Impact</option></select></div>
-                <div><label>Tamaño / Intensidad:</label><input type="range" id="rngTxtSize" min="40" max="300" value="120" oninput="updateTextPreview()"><input type="range" id="rngScatter" min="10" max="100" value="50" oninput="updateTextPreview()" style="margin-top:5px;"></div>
+            <div class="modal-header">
+                <h3 style="margin:0">✨ Diseñador de Texto Mágico</h3>
+                <button class="close-btn" onclick="closeModal('textToolModal')">×</button>
             </div>
-            <div class="effects-container"><span class="effects-label">📚 Catálogo de Efectos</span><iframe id="effectsFrame" src="efectos.html"></iframe></div>
+            
+            <div class="text-preview-area">
+                <canvas id="textPreviewCanvas" height="160"></canvas>
+            </div>
+
+            <div class="text-inputs-row">
+                <div>
+                    <label>Texto:</label>
+                    <textarea id="txtString" rows="1" style="resize:none; font-size:1.1rem; letter-spacing:1px;" oninput="updateTextPreview()">VERSACE</textarea>
+                </div>
+                <div>
+                    <label>Fuente:</label>
+                    <select id="txtFontFamily" onchange="updateTextPreview()">
+                        <option value="Arial">Arial (Sistema)</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Courier New">Courier New</option>
+                        </select>
+                </div>
+                <div>
+                    <label>Tamaño / Intensidad:</label>
+                    <input type="range" id="rngTxtSize" min="40" max="300" value="120" oninput="updateTextPreview()" title="Tamaño Texto">
+                    <input type="range" id="rngScatter" min="10" max="100" value="40" oninput="updateTextPreview()" style="margin-top:5px;" title="Intensidad Efecto">
+                </div>
+            </div>
+
+            <div class="effects-container">
+                <span class="effects-label">📚 Catálogo de Efectos (Cargado desde Módulo Externo)</span>
+                
+                <iframe id="effectsFrame" src="efectos.html"></iframe>
+                
+            </div>
+
             <button onclick="applyTextToWorkspace()" style="margin-top:20px; font-size:1.1rem; width:100%;">🚀 GENERAR PEDRERÍA Y CERRAR</button>
         </div>
     </div>
 
     <div id="exportModal" class="modal-backdrop">
         <div class="modal-content">
-            <div class="modal-header"><h3 style="margin:0">Seleccionar Formato</h3><button class="close-btn" onclick="closeModal('exportModal')">×</button></div>
+            <div class="modal-header">
+                <h3 style="margin:0">Seleccionar Formato</h3>
+                <button class="close-btn" onclick="closeModal('exportModal')">×</button>
+            </div>
+            <p>El diseño se guardará en la nube y se descargará en:</p>
             <div class="export-grid">
-                <div class="export-option" onclick="finalizeExport('svg')"><span class="export-icon">🎨</span><span class="export-label">SVG</span></div>
-                <div class="export-option" onclick="finalizeExport('plt')"><span class="export-icon">📠</span><span class="export-label">PLT</span></div>
-                <div class="export-option" onclick="finalizeExport('ai')"><span class="export-icon">✒️</span><span class="export-label">AI</span></div>
+                <div class="export-option" onclick="finalizeExport('svg')">
+                    <span class="export-icon">🎨</span>
+                    <span class="export-label">SVG</span>
+                </div>
+                <div class="export-option" onclick="finalizeExport('plt')">
+                    <span class="export-icon">📠</span>
+                    <span class="export-label">PLT (HPGL)</span>
+                </div>
+                <div class="export-option" onclick="finalizeExport('ai')">
+                    <span class="export-icon">✒️</span>
+                    <span class="export-label">AI (EPS)</span>
+                </div>
             </div>
         </div>
     </div>
 
     <canvas id="procCanvas" style="display:none;"></canvas>
-    <div class="footer">Desarrollado por <strong>JESÚS VALLEJO</strong><br><span class="gemini-tag">POWERED BY GEMINI 4.0 - FULL ZOOM ENABLED</span></div>
+
+    <div class="footer">
+        Desarrollado por <strong>JESÚS VALLEJO</strong><br>
+        <span class="gemini-tag">POWERED BY GEMINI 3 PRO - V3.6 (FULL EFFECTS & TOUCH ZOOM)</span>
+        <div style="margin-top:10px; font-style:italic; font-size:0.75rem">
+            HERRAMIENTA DE USO EXCLUSIVO PARA EMPLEADOS DE <b>VIVA ROUSS</b> Y <b>MISS ROUSS</b>.
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-        const firebaseConfig = { apiKey: "AIzaSyCngQL1pdqghv2vbjkPycT1Xf0C46f7jYs", authDomain: "cirineo-cec21.firebaseapp.com", projectId: "cirineo-cec21", storageBucket: "cirineo-cec21.firebasestorage.app", messagingSenderId: "620210618284", appId: "1:620210618284:web:482bab9bf74650fff18409" };
-        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
-        
-        window.saveToFirebase = async (points, svgString, format) => {
-            const name = document.getElementById('projectName').value.trim(); if(!name) return;
-            try { await addDoc(collection(db, "proyectos_pedreria"), { nombre_proyecto: name, puntos_total: points.length, puntos_json: JSON.stringify(points), svg_generado: svgString, formato_exportado: format, fecha: serverTimestamp(), autor: "JESÚS VALLEJO" }); } catch(e) { console.error("DB Error", e); }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCngQL1pdqghv2vbjkPycT1Xf0C46f7jYs",
+            authDomain: "cirineo-cec21.firebaseapp.com",
+            projectId: "cirineo-cec21",
+            storageBucket: "cirineo-cec21.firebasestorage.app",
+            messagingSenderId: "620210618284",
+            appId: "1:620210618284:web:482bab9bf74650fff18409"
         };
-        // Funciones DB omitidas por brevedad (mismas que V3)
-        window.fetchFontsFromDB = async () => {}; // Placeholder para mantener estructura
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- GESTIÓN DE PROYECTOS ---
+        window.fetchProjectsFromDB = async () => {
+            const list = document.getElementById('galleryList');
+            list.innerHTML = '<div style="padding:20px; color:#aaa;">Cargando...</div>';
+            try {
+                const q = query(collection(db, "proyectos_pedreria"), orderBy("fecha", "desc"), limit(20));
+                const querySnapshot = await getDocs(q);
+                list.innerHTML = "";
+                if(querySnapshot.empty) {
+                    list.innerHTML = '<div style="padding:20px;">No hay proyectos.</div>';
+                    return;
+                }
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const date = data.fecha ? data.fecha.toDate().toLocaleDateString() : "S/F";
+                    const safeName = data.nombre_proyecto || "Sin nombre";
+                    const li = document.createElement('div');
+                    li.className = 'project-item';
+                    li.innerHTML = `
+                        <div class="p-info"><h4>${safeName}</h4><span>${date} • ${data.puntos_total || "?"} pts</span></div>
+                        <button class="btn-load" onclick='loadProjectData(${JSON.stringify(data).replace(/'/g, "&#39;")})'>CARGAR</button>
+                    `;
+                    list.appendChild(li);
+                });
+            } catch (e) { console.error(e); list.innerHTML = '<div style="color:red">Error cargando lista.</div>'; }
+        };
+
+        window.saveToFirebase = async (points, svgString, format) => {
+            const name = document.getElementById('projectName').value.trim();
+            if(!name) return; 
+            try {
+                await addDoc(collection(db, "proyectos_pedreria"), {
+                    nombre_proyecto: name,
+                    puntos_total: points.length,
+                    puntos_json: JSON.stringify(points), 
+                    svg_generado: svgString,
+                    formato_exportado: format,
+                    config: window.getLastConfig(),
+                    fecha: serverTimestamp(),
+                    autor: "JESÚS VALLEJO"
+                });
+            } catch(e) { console.error("Error DB:", e); }
+        };
+
+        // --- GESTIÓN DE FUENTES ---
+        window.fetchFontsFromDB = async () => {
+            const list = document.getElementById('fontListDisplay');
+            const select = document.getElementById('txtFontFamily');
+            list.innerHTML = "Cargando...";
+            
+            try {
+                const q = query(collection(db, "fuentes_usuario"), orderBy("nombre", "asc"));
+                const querySnapshot = await getDocs(q);
+                
+                list.innerHTML = "";
+                while (select.options.length > 4) { select.remove(4); }
+
+                querySnapshot.forEach((doc) => {
+                    const f = doc.data();
+                    const item = document.createElement('div');
+                    item.className = 'font-item';
+                    item.innerHTML = `<strong>${f.nombre}</strong><span style="font-size:0.7rem; color:#aaa; max-width:150px; overflow:hidden; text-overflow:ellipsis;">${f.url}</span>`;
+                    list.appendChild(item);
+                    loadFontToBrowser(f.nombre, f.url);
+                    const opt = document.createElement('option');
+                    opt.value = f.nombre;
+                    opt.text = f.nombre + " (Custom)";
+                    select.add(opt);
+                });
+            } catch (e) { console.error(e); list.innerHTML = "Error cargando fuentes."; }
+        };
+
+        window.saveNewFont = async () => {
+            const name = document.getElementById('newFontName').value.trim();
+            const url = document.getElementById('newFontUrl').value.trim();
+            if(!name || !url) return alert("Llena ambos campos");
+            try {
+                await addDoc(collection(db, "fuentes_usuario"), { nombre: name, url: url, fecha: serverTimestamp() });
+                alert("Fuente agregada. Se recargará la lista.");
+                document.getElementById('newFontName').value = "";
+                document.getElementById('newFontUrl').value = "";
+                window.fetchFontsFromDB();
+            } catch(e) { alert("Error guardando fuente."); }
+        };
+
+        async function loadFontToBrowser(name, url) {
+            try {
+                const font = new FontFace(name, `url(${url})`);
+                await font.load();
+                document.fonts.add(font);
+            } catch(e) { console.error("No se pudo cargar la fuente visualmente:", name); }
+        }
+        
+        window.fetchFontsFromDB();
     </script>
 
     <script>
-        let globalPoints = []; let backupPoints = []; let canvasWidth = 1000; let canvasHeight = 1000;
+        // --- ESTADO GLOBAL ---
+        let globalPoints = [];     
+        let backupPoints = [];     
+        let canvasWidth = 1000;       
+        let canvasHeight = 1000;
+        let isLoadedProject = false; 
+        let manualEditsMade = false;
         let currentTextEffect = 'fill';
         
-        // --- ZOOM GLOBAL (MODO LECTURA) ---
-        const visualWrapper = document.getElementById('visualWrapper');
-        const svgContent = document.getElementById('svgContent');
-        let viewScale = 1; let viewPanX = 0; let viewPanY = 0;
-        let isViewDragging = false; let lastViewMouse = {x:0, y:0};
+        // --- UI HELPERS ---
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function openGallery() { document.getElementById('galleryModal').style.display = 'flex'; if(window.fetchProjectsFromDB) window.fetchProjectsFromDB(); }
+        function openFontManager() { document.getElementById('fontManagerModal').style.display = 'flex'; if(window.fetchFontsFromDB) window.fetchFontsFromDB(); }
         
-        visualWrapper.addEventListener('wheel', (e) => {
-            if(document.getElementById('editorOverlay').style.display === 'flex') return;
-            e.preventDefault();
-            const s = (e.deltaY < 0) ? 1.1 : 0.9;
-            viewScale *= s;
-            updateViewTransform();
+        // --- COMUNICACIÓN CON EFECTOS.HTML ---
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.action === 'applyEffect') {
+                const effectName = event.data.effectName;
+                console.log("Efecto activado:", effectName);
+                currentTextEffect = effectName;
+                updateTextPreview();
+            }
         });
-        
-        visualWrapper.addEventListener('mousedown', (e) => {
-            if(document.getElementById('editorOverlay').style.display === 'flex') return;
-            isViewDragging = true; lastViewMouse = {x: e.clientX, y: e.clientY};
-            visualWrapper.style.cursor = 'grabbing';
-        });
-        
-        window.addEventListener('mousemove', (e) => {
-            if(!isViewDragging) return;
-            const dx = e.clientX - lastViewMouse.x; const dy = e.clientY - lastViewMouse.y;
-            viewPanX += dx; viewPanY += dy;
-            lastViewMouse = {x: e.clientX, y: e.clientY};
-            updateViewTransform();
-        });
-        
-        window.addEventListener('mouseup', () => { isViewDragging = false; visualWrapper.style.cursor = 'grab'; });
 
-        function updateViewTransform() {
-            svgContent.style.transform = `translate(${viewPanX}px, ${viewPanY}px) scale(${viewScale})`;
+        function openTextTool() {
+            document.getElementById('textToolModal').style.display = 'flex';
+            updateTextPreview();
         }
 
-        // --- RENDERIZADO AVANZADO (NUEVA LÓGICA DE DISPERSIÓN) ---
+        // =========================================================================
+        // === MOTOR DE RENDERIZADO DE EFECTOS (NUEVO Y COMPLETO) ===
+        // =========================================================================
+        
         function renderAdvancedEffect(ctx, text, x, y, size, fontName, effect, intensity) {
             ctx.font = `bold ${size}px "${fontName}"`;
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillStyle = "white"; ctx.strokeStyle = "white";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "white"; // Pedrería siempre mapea blanco/colores claros
+            ctx.strokeStyle = "white";
 
-            // Lógica Específica "Dispersión" (Lluvia/Goteo estilo referencias)
-            if (effect === 'dispersion') {
-                // 1. Dibujar texto sólido base
-                ctx.fillText(text, x, y);
+            switch (effect) {
+                // --- BÁSICOS ---
+                case 'fill':
+                case 'pavé': // Pavé es relleno sólido para el algoritmo de puntos
+                    ctx.fillText(text, x, y);
+                    break;
                 
-                // 2. Calcular métricas para el goteo
-                const metrics = ctx.measureText(text);
-                const w = metrics.width;
-                const h = size; // Aprox altura fuente
-                const startX = x - w/2;
-                const baselineY = y + h/3; // Base visual de la letra
-                
-                // 3. Crear líneas de caída (Streams)
-                const density = 10; // Pixeles entre cada "hilo" de lluvia
-                const numStreams = w / density;
-                
-                for(let i=0; i < numStreams; i++) {
-                    const currentX = startX + (i * density);
-                    // Probabilidad de que caiga un hilo en esta X (para que no sea un bloque sólido)
-                    if (Math.random() > 0.3) { 
-                        const dropLength = (Math.random() * size * 2) * (intensity/30); // Largo aleatorio
-                        const dotSizeBase = size * 0.08;
+                case 'outline':
+                case 'negative_box':
+                    ctx.lineWidth = size * 0.05;
+                    ctx.strokeText(text, x, y);
+                    if(effect === 'negative_box') {
+                        const m = ctx.measureText(text);
+                        ctx.lineWidth = size * 0.02;
+                        ctx.strokeRect(x - m.width/2 - 20, y - size/2 - 20, m.width + 40, size + 40);
+                    }
+                    break;
+
+                // --- NUEVO EFECTO: DISPERSIÓN (Goteo complejo de las imágenes) ---
+                case 'dispersion':
+                    // 1. Dibujar el texto base
+                    ctx.fillText(text, x, y);
+                    
+                    // 2. Generar efecto de goteo en la parte inferior
+                    const metrics = ctx.measureText(text);
+                    const textWidth = metrics.width;
+                    const textHeight = size * 0.8; // Aprox
+                    const startX = x - textWidth / 2;
+                    const bottomY = y + textHeight / 2;
+                    
+                    const numDrops = textWidth / (size * 0.1); // Densidad de gotas
+                    const maxDropLength = size * (intensity / 20); // Largo basado en intensidad
+                    
+                    for (let i = 0; i <= numDrops; i++) {
+                        const currentX = startX + (i * (textWidth / numDrops));
                         
-                        // Dibujar puntos cayendo
-                        for(let dy = 0; dy < dropLength; dy += dotSizeBase * 1.5) {
-                            // Hacer que los puntos se hagan más pequeños al final
-                            const currentDotSize = dotSizeBase * (1 - (dy/dropLength));
-                            if(currentDotSize < 0.5) break;
+                        // Aleatoriedad en la longitud de cada estela de goteo
+                        const dropLength = Math.random() * maxDropLength + (size * 0.5);
+                        const dropSize = size * 0.06; // Tamaño base de las gotas
 
+                        // Crear la estela de puntos cayendo
+                        for (let dy = 0; dy < dropLength; dy += dropSize * 1.5) {
+                             // Dispersión horizontal aleatoria a medida que cae
+                            const scatterX = (Math.random() - 0.5) * (dy * 0.2);
+                            // El tamaño de la gota se reduce al caer
+                            const currentDropSize = dropSize * (1 - (dy / dropLength) * 0.6);
+                            
                             ctx.beginPath();
-                            ctx.arc(currentX, baselineY + dy, currentDotSize, 0, Math.PI*2);
+                            ctx.arc(currentX + scatterX, bottomY + dy, currentDropSize, 0, Math.PI * 2);
                             ctx.fill();
                         }
                     }
-                }
-                return; // Terminar aquí para este efecto
-            }
+                    break;
 
-            // Resto de efectos (Simplificados para brevedad, misma lógica previa)
-            switch (effect) {
-                case 'outline': ctx.lineWidth = size*0.05; ctx.strokeText(text, x, y); break;
-                case 'negative_box': ctx.lineWidth = size*0.02; ctx.strokeText(text, x, y); ctx.strokeRect(x-size*2, y-size, size*4, size*2); break;
-                case 'shatter': 
-                    ctx.save(); ctx.fillText(text, x, y); ctx.globalCompositeOperation = 'destination-out';
-                    for(let i=0; i<20; i++) {
-                        ctx.beginPath(); ctx.moveTo(x+(Math.random()-0.5)*size*3, y+(Math.random()-0.5)*size);
-                        ctx.lineTo(x+Math.random()*50, y+50); ctx.lineTo(x-20, y+40); ctx.fill();
+                // --- DISTORSIONES Y ROTURAS ---
+                case 'shatter': // Efecto Versace Roto
+                    ctx.save();
+                    ctx.fillText(text, x, y);
+                    ctx.globalCompositeOperation = 'destination-out';
+                    const shards = 20 * (intensity/10);
+                    for(let i=0; i<shards; i++) {
+                        ctx.beginPath();
+                        const sx = x + (Math.random()-0.5) * size * 5;
+                        const sy = y + (Math.random()-0.5) * size;
+                        ctx.moveTo(sx, sy);
+                        ctx.lineTo(sx + 30, sy + 50);
+                        ctx.lineTo(sx - 20, sy + 40);
+                        ctx.fill();
                     }
-                    ctx.restore(); break;
-                default: ctx.fillText(text, x, y); // Fill por defecto
+                    ctx.restore();
+                    break;
+
+                case 'melting': // Goteo simple
+                case 'blood': // Drip
+                    ctx.fillText(text, x, y);
+                    const drops = 15 * (intensity/20);
+                    const widthApprox = text.length * (size * 0.6);
+                    const startXDrop = x - widthApprox/2;
+                    for(let i=0; i<drops; i++) {
+                        const dx = startXDrop + Math.random() * widthApprox;
+                        const dy = y + size/5;
+                        const len = Math.random() * size * 1.5;
+                        ctx.beginPath();
+                        ctx.arc(dx, dy + len, size*0.05, 0, Math.PI, false); // Punta gota
+                        ctx.rect(dx - size*0.05, dy, size*0.1, len);
+                        ctx.fill();
+                    }
+                    break;
+
+                case 'lightning': // Rayo cortando
+                    ctx.fillText(text, x, y);
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.beginPath();
+                    ctx.moveTo(x - size*2, y - size);
+                    let lx = x - size*2, ly = y - size;
+                    while(lx < x + size*2) {
+                        lx += 20; ly += (Math.random() - 0.5) * 60;
+                        ctx.lineTo(lx, ly);
+                    }
+                    ctx.lineWidth = size * 0.08;
+                    ctx.stroke();
+                    ctx.globalCompositeOperation = 'source-over';
+                    break;
+
+                // --- PATRONES Y RELLENOS ---
+                case 'brick':
+                case 'camo':
+                case 'zebra_v2':
+                case 'snake':
+                case 'matrix':
+                case 'circuit':
+                case 'scanline':
+                case 'disco':
+                    // 1. Dibujar texto base en un canvas temporal para usarlo como máscara
+                    const mCvs = document.createElement('canvas');
+                    mCvs.width = ctx.canvas.width; mCvs.height = ctx.canvas.height;
+                    const mCtx = mCvs.getContext('2d');
+                    mCtx.font = ctx.font; mCtx.textAlign = "center"; mCtx.textBaseline = "middle";
+                    mCtx.fillStyle = "white";
+                    mCtx.fillText(text, x, y);
+
+                    // 2. Dibujar el patrón en el canvas principal
+                    ctx.save();
+                    
+                    // Aplicar patrón
+                    if (effect === 'brick') {
+                        const brickH = size * 0.2; const brickW = size * 0.4;
+                        for(let by=0; by<ctx.canvas.height; by+=brickH) {
+                            const offset = (Math.floor(by/brickH)%2 === 0) ? 0 : brickW/2;
+                            for(let bx=-50; bx<ctx.canvas.width; bx+=brickW) {
+                                ctx.strokeRect(bx + offset, by, brickW, brickH);
+                            }
+                        }
+                    } else if (effect === 'matrix') {
+                        ctx.font = `${size*0.3}px monospace`;
+                        for(let mx=0; mx<ctx.canvas.width; mx+=size*0.3) {
+                            for(let my=0; my<ctx.canvas.height; my+=size*0.3) {
+                                if(Math.random() > 0.5) ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), mx, my);
+                            }
+                        }
+                    } else if (effect === 'scanline') {
+                        for(let ly=0; ly<ctx.canvas.height; ly+=size*0.05) {
+                            ctx.fillRect(0, ly, ctx.canvas.width, size*0.02);
+                        }
+                    } else if (effect === 'circuit') {
+                         ctx.lineWidth = size * 0.03;
+                         for(let i=0; i<50; i++) {
+                             ctx.beginPath();
+                             ctx.moveTo(Math.random()*ctx.canvas.width, Math.random()*ctx.canvas.height);
+                             ctx.lineTo(Math.random()*ctx.canvas.width, Math.random()*ctx.canvas.height);
+                             ctx.stroke();
+                             ctx.beginPath(); ctx.arc(Math.random()*ctx.canvas.width, Math.random()*ctx.canvas.height, size*0.05, 0, Math.PI*2); ctx.fill();
+                         }
+                    }
+
+                    // 3. Usar el texto como máscara (Composite Operation)
+                    ctx.globalCompositeOperation = 'destination-in';
+                    ctx.drawImage(mCvs, 0, 0);
+                    
+                    // 4. Restaurar para que el contorno sea visible si se desea, o dejar solo el relleno
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.restore();
+                    // Opcional: Dibujar contorno fino para legibilidad
+                    ctx.lineWidth = 1; ctx.strokeText(text, x, y);
+                    break;
+
+                // --- ESTILOS DE LUJO ---
+                case 'baguette': // Piedras rectangulares (simuladas con dashes)
+                    ctx.lineWidth = size * 0.02;
+                    ctx.strokeText(text, x, y);
+                    ctx.setLineDash([size*0.1, size*0.05]); // Patrón baguette
+                    ctx.lineWidth = size * 0.08;
+                    ctx.strokeText(text, x, y); // Doble stroke para efecto
+                    ctx.setLineDash([]);
+                    break;
+
+                case 'gold_dust': // Ruido aleatorio
+                case 'sand':
+                case 'ice':
+                case 'galaxy':
+                case 'fading':
+                    // Dibujar texto sólido primero
+                    const dCvs = document.createElement('canvas');
+                    dCvs.width = ctx.canvas.width; dCvs.height = ctx.canvas.height;
+                    const dCtx = dCvs.getContext('2d');
+                    dCtx.font = ctx.font; dCtx.textAlign = "center"; dCtx.textBaseline = "middle";
+                    dCtx.fillStyle = "white";
+                    dCtx.fillText(text, x, y);
+                    
+                    const imgData = dCtx.getImageData(0,0, dCvs.width, dCvs.height);
+                    const pixels = imgData.data;
+                    
+                    // Procesar píxeles para añadir ruido
+                    for (let i = 0; i < pixels.length; i += 4) {
+                        if (pixels[i+3] > 0) { // Si hay pixel
+                            let noise = Math.random();
+                            let threshold = 0.5;
+                            if (effect === 'fading') {
+                                // Gradiente vertical basado en Y
+                                const py = Math.floor((i / 4) / dCvs.width);
+                                threshold = (py - (y - size/2)) / size; // 0 a 1 aprox
+                            }
+                            if (noise > threshold) {
+                                ctx.fillRect((i/4)%dCvs.width, Math.floor((i/4)/dCvs.width), 1, 1);
+                            }
+                        }
+                    }
+                    break;
+
+                case 'halo':
+                    ctx.fillText(text, x, y);
+                    ctx.beginPath();
+                    const metricsHalo = ctx.measureText(text);
+                    ctx.arc(x, y, metricsHalo.width/2 + 20, 0, Math.PI * 2);
+                    ctx.lineWidth = size * 0.05;
+                    ctx.stroke();
+                    break;
+
+                case 'neon': // Múltiples bordes
+                    ctx.lineWidth = size * 0.15; ctx.strokeText(text, x, y);
+                    ctx.lineWidth = size * 0.05; ctx.strokeStyle = "black"; ctx.strokeText(text, x, y); // Gap
+                    ctx.lineWidth = size * 0.02; ctx.strokeStyle = "white"; ctx.strokeText(text, x, y); // Inner
+                    break;
+                
+                case 'tiara':
+                    ctx.fillText(text, x, y);
+                    ctx.font = `${size}px "Segoe UI Emoji"`;
+                    ctx.fillText("👑", x, y - size*0.8);
+                    break;
+                
+                case 'royal_cross':
+                    ctx.fillText(text, x, y);
+                    ctx.font = `${size}px "Segoe UI Emoji"`;
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.fillText("✝️", x, y);
+                    ctx.globalCompositeOperation = 'source-over';
+                    break;
+
+                default: // Fallback
+                    ctx.fillText(text, x, y);
             }
         }
 
-        // --- NUEVOS ALGORITMOS DE DISTRIBUCIÓN ---
+        // --- ACTUALIZAR VISTA PREVIA (Modal) ---
+        function updateTextPreview() {
+            const cvs = document.getElementById('textPreviewCanvas');
+            const ctx = cvs.getContext('2d');
+            const text = document.getElementById('txtString').value;
+            const fontName = document.getElementById('txtFontFamily').value;
+            const size = parseInt(document.getElementById('rngTxtSize').value);
+            const scatter = parseInt(document.getElementById('rngScatter').value);
+
+            // Ajustar canvas para acomodar efectos grandes como Dispersión
+            cvs.width = Math.max(600, text.length * (size * 0.7) + 100);
+            cvs.height = size * 3.5; 
+
+            // Fondo "Camiseta"
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0,cvs.width, cvs.height);
+
+            const cx = cvs.width / 2;
+            const cy = cvs.height / 2.5; // Subir un poco el texto base
+
+            renderAdvancedEffect(ctx, text, cx, cy, size, fontName, currentTextEffect, scatter);
+        }
+
+        // --- APLICAR AL WORKSPACE (Generación Final) ---
+        function applyTextToWorkspace() {
+            const previewCvs = document.getElementById('textPreviewCanvas');
+            const procCanvas = document.getElementById('procCanvas');
+            const ctx = procCanvas.getContext('2d');
+            
+            // Renderizamos a mayor resolución para calidad
+            procCanvas.width = previewCvs.width * 2;
+            procCanvas.height = previewCvs.height * 2;
+            
+            const text = document.getElementById('txtString').value;
+            const fontName = document.getElementById('txtFontFamily').value;
+            const size = parseInt(document.getElementById('rngTxtSize').value) * 2;
+            const scatter = parseInt(document.getElementById('rngScatter').value);
+
+            // Fondo blanco para que el generador de puntos detecte lo "negro" o viceversa
+            // NOTA IMPORTANTE: El algoritmo generatePoints detecta < 150 (oscuro).
+            // Por lo tanto, debemos dibujar el TEXTO EN NEGRO y el FONDO EN BLANCO.
+            // Pero mi función de renderizado usa "White" para simular piedras sobre fondo negro visualmente.
+            // Invertiremos los colores para el procesamiento.
+            
+            ctx.fillStyle = "white"; // Fondo
+            ctx.fillRect(0,0, procCanvas.width, procCanvas.height);
+            
+            ctx.fillStyle = "black"; // Texto (para ser detectado)
+            ctx.strokeStyle = "black";
+            
+            // Hack temporal: Sobreescribimos fillStyle/strokeStyle del contexto antes de llamar
+            // Pero como la función renderAdvancedEffect fuerza "white", necesitamos un modo "processing".
+            
+            // SOLUCIÓN: Renderizar visualmente (Blanco sobre Negro) y luego INVERTIR la imagen.
+            const tempCvs = document.createElement('canvas');
+            tempCvs.width = procCanvas.width; tempCvs.height = procCanvas.height;
+            const tCtx = tempCvs.getContext('2d');
+            tCtx.fillStyle = "black"; tCtx.fillRect(0,0,tempCvs.width, tempCvs.height); // Fondo negro
+            
+            // Renderizamos el efecto en blanco sobre negro
+            renderAdvancedEffect(tCtx, text, procCanvas.width/2, procCanvas.height/2.5, size, fontName, currentTextEffect, scatter);
+            
+            // Ahora copiamos al canvas de procesamiento e invertimos
+            const idata = tCtx.getImageData(0,0, tempCvs.width, tempCvs.height);
+            const data = idata.data;
+            for(let i=0; i<data.length; i+=4) {
+                // Invertir: Lo que era negro (0) se vuelve blanco (255), lo blanco (255) se vuelve negro (0)
+                // Así generatePoints detecta el negro como "zona de piedras".
+                data[i] = 255 - data[i];     // R
+                data[i+1] = 255 - data[i+1]; // G
+                data[i+2] = 255 - data[i+2]; // B
+            }
+            ctx.putImageData(idata, 0, 0);
+
+            canvasWidth = procCanvas.width;
+            canvasHeight = procCanvas.height;
+            document.getElementById('textToolModal').style.display = 'none';
+            document.getElementById('imgInputGroup').style.display = 'none';
+            document.getElementById('btnGenerate').style.display = 'block';
+            
+            generatePoints(ctx);
+            renderSVGPreview();
+            updateLabels();
+            document.getElementById('btnOpenEditor').disabled = false;
+        }
+
+        // --- LÓGICA EXISTENTE ---
+        const inputs = document.querySelectorAll('.param-input');
+        inputs.forEach(i => i.addEventListener('input', handleParamChange));
+        document.getElementById('realWidthCm').addEventListener('input', updateLabels);
+        document.getElementById('radius').addEventListener('input', () => { if(isLoadedProject || globalPoints.length > 0) renderSVGPreview(); updateLabels(); });
+
+        function handleParamChange(e) { updateLabels(); }
+
+        function updateLabels() {
+            const realW = parseFloat(document.getElementById('realWidthCm').value) || 25;
+            const w = canvasWidth > 0 ? canvasWidth : 1000;
+            const scaleFactor = (realW * 10) / w; 
+            document.getElementById('yStepVal').innerText = (document.getElementById('yStep').value * scaleFactor).toFixed(1);
+            document.getElementById('xStepVal').innerText = (document.getElementById('xStep').value * scaleFactor).toFixed(1);
+            document.getElementById('angleVal').innerText = document.getElementById('angle').value;
+            const rPx = parseFloat(document.getElementById('radius').value);
+            document.getElementById('radiusVal').innerText = (rPx * 2 * scaleFactor).toFixed(1);
+            if(canvasHeight > 0) {
+                const hCm = (canvasHeight * (realW / w)).toFixed(1);
+                document.getElementById('dimDisplay').innerText = `Dimensiones Finales: ${realW} cm x ${hCm} cm`;
+            }
+        }
+        window.getLastConfig = () => { return { mode: document.getElementById('mode').value, realWidth: document.getElementById('realWidthCm').value, radiusPx: document.getElementById('radius').value }; }
+
+        window.loadProjectData = (data) => {
+            if(confirm("Se reemplazará el trabajo actual. ¿Continuar?")) {
+                try {
+                    if (data.puntos_json) globalPoints = JSON.parse(data.puntos_json);
+                    else alert("Proyecto antiguo no compatible.");
+                    document.getElementById('projectName').value = data.nombre_proyecto;
+                    isLoadedProject = true;
+                    let maxX = 0, maxY = 0;
+                    globalPoints.forEach(p => { if(p.x > maxX) maxX = p.x; if(p.y > maxY) maxY = p.y; });
+                    canvasWidth = maxX + 50; canvasHeight = maxY + 50;
+                    document.getElementById('btnOpenEditor').disabled = false;
+                    closeModal('galleryModal');
+                    renderSVGPreview(); updateLabels();
+                } catch(e) { console.error(e); }
+            }
+        };
+
+        function processImage() {
+            const input = document.getElementById('imageInput');
+            const isTextMode = document.getElementById('textToolModal').style.display === 'none' && canvasWidth > 0;
+            
+            if (!input.files[0] && !isTextMode) return alert("Selecciona imagen o usa el Creador de Texto.");
+            
+            if (input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const c = document.getElementById('procCanvas');
+                        const ctx = c.getContext('2d', { willReadFrequently: true });
+                        const maxW = 1000;
+                        const scale = maxW / img.width;
+                        c.width = maxW; c.height = img.height * scale;
+                        canvasWidth = c.width; canvasHeight = c.height;
+                        ctx.fillStyle = "white"; ctx.fillRect(0,0,c.width, c.height);
+                        ctx.drawImage(img, 0, 0, c.width, c.height);
+                        generatePoints(ctx); renderSVGPreview(); updateLabels();
+                        document.getElementById('btnOpenEditor').disabled = false;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                const c = document.getElementById('procCanvas');
+                const ctx = c.getContext('2d');
+                generatePoints(ctx); renderSVGPreview();
+            }
+        }
+
         function generatePoints(ctx) {
             const yStep = parseInt(document.getElementById('yStep').value);
             const xStep = parseInt(document.getElementById('xStep').value);
-            const angleDeg = parseInt(document.getElementById('angle').value);
-            const angle = angleDeg * (Math.PI / 180);
+            const angle = parseInt(document.getElementById('angle').value) * (Math.PI / 180);
             const mode = document.getElementById('mode').value;
             const w = ctx.canvas.width; const h = ctx.canvas.height;
             const imgData = ctx.getImageData(0, 0, w, h);
             globalPoints = [];
 
-            // Lógica especial para algoritmos no lineales
-            if (['jitter', 'wave', 'diamond', 'radial', 'cross'].includes(mode)) {
-                
-                // Escaneo denso y decisión de colocación basada en coordenadas
-                for (let y = 0; y < h; y += (mode==='cross'? yStep/1.5 : yStep)) {
-                    for (let x = 0; x < w; x += (mode==='cross'? xStep/1.5 : xStep)) {
-                        
-                        let px = x, py = y;
-                        let shouldPlace = false;
-
-                        // ALGORITMOS PRO V4.0
-                        if (mode === 'jitter') {
-                            // Stochastic: Posición base + ruido aleatorio controlado
-                            const jitterAmt = xStep * 0.4;
-                            px = x + (Math.random() - 0.5) * jitterAmt;
-                            py = y + (Math.random() - 0.5) * jitterAmt;
-                            shouldPlace = true;
-                        } 
-                        else if (mode === 'wave') {
-                            // Onda Sinusoidal: Desplazamiento Y basado en X
-                            const freq = 0.05; const amp = yStep * 1.5;
-                            py = y + Math.sin(x * freq + angle) * amp;
-                            shouldPlace = true;
-                        }
-                        else if (mode === 'diamond') {
-                            // Diamante: Offset de filas impares estricto (45 grados)
-                            const row = Math.floor(y / yStep);
-                            if (row % 2 !== 0) px += xStep / 2;
-                            shouldPlace = true;
-                        }
-                        else if (mode === 'radial') {
-                            // Radial: Coordenadas polares desde el centro
-                            const cx = w/2; const cy = h/2;
-                            const dx = x - cx; const dy = y - cy;
-                            const dist = Math.sqrt(dx*dx + dy*dy);
-                            // Cuantizar distancia en anillos
-                            if (Math.floor(dist) % yStep < 2) shouldPlace = true; 
-                        }
-                        else if (mode === 'cross') {
-                            // Cross-Stitch: Pares de puntos formando X
-                            // Dibujamos dos puntos por celda simulada
-                            // Punto 1
-                            if(isPixelBlack(imgData, x, y, w)) globalPoints.push({x: x, y: y});
-                            // Punto 2 (offset diagonal)
-                            if(isPixelBlack(imgData, x+xStep/2, y+yStep/2, w)) globalPoints.push({x: x+xStep/2, y: y+yStep/2});
-                            continue; // Saltar push normal
-                        }
-
-                        // Verificar contra la imagen (Si el pixel desplazado "cae" en zona negra)
-                        if (shouldPlace) {
-                            // Clamp coordinates
-                            const sx = Math.max(0, Math.min(w-1, Math.floor(px)));
-                            const sy = Math.max(0, Math.min(h-1, Math.floor(py)));
-                            if(isPixelBlack(imgData, sx, sy, w)) {
-                                globalPoints.push({x: px, y: py});
-                            }
-                        }
+            for (let y = -h; y < h * 2; y += yStep) {
+                let segment = [];
+                for (let x = -w; x < w * 2; x += 1) {
+                    const rotX = Math.floor(x * Math.cos(angle) - y * Math.sin(angle));
+                    const rotY = Math.floor(x * Math.sin(angle) + y * Math.cos(angle));
+                    if (rotX >= 0 && rotX < w && rotY >= 0 && rotY < h) {
+                        const idx = (rotY * w + rotX) * 4;
+                        if (imgData.data[idx] < 150) segment.push({x: rotX, y: rotY});
+                        else if (segment.length > 0) { addSegment(segment, xStep, mode); segment = []; }
                     }
                 }
-            } else {
-                // Algoritmos Lineales Clásicos (Rotación estándar)
-                for (let y = -h; y < h * 2; y += yStep) {
-                    let segment = [];
-                    for (let x = -w; x < w * 2; x += 1) {
-                        const rotX = Math.floor(x * Math.cos(angle) - y * Math.sin(angle));
-                        const rotY = Math.floor(x * Math.sin(angle) + y * Math.cos(angle));
-                        if (rotX >= 0 && rotX < w && rotY >= 0 && rotY < h) {
-                            if (isPixelBlack(imgData, rotX, rotY, w)) segment.push({x: rotX, y: rotY});
-                            else if (segment.length > 0) { processSegment(segment, xStep, mode); segment = []; }
-                        }
-                    }
-                    if (segment.length > 0) processSegment(segment, xStep, mode);
-                }
+                if (segment.length > 0) addSegment(segment, xStep, mode);
             }
         }
 
-        function isPixelBlack(data, x, y, w) {
-            const idx = (Math.floor(y) * w + Math.floor(x)) * 4;
-            return data.data[idx] < 150; // Umbral de "negro"
-        }
-
-        function processSegment(seg, step, mode) {
+        function addSegment(seg, step, mode) {
             if (seg.length < 2) return;
             if (mode === 'adaptive') {
                 const count = Math.max(1, Math.round(seg.length / step));
@@ -511,94 +935,143 @@
                     const idx = Math.floor((seg.length / (count+1)) * (i+1));
                     globalPoints.push(seg[idx]);
                 }
-            } else { 
-                // Grid / Honeycomb base linear logic
-                for(let i=0; i<seg.length; i+=step) globalPoints.push(seg[i]); 
-            }
-        }
-
-        // --- SISTEMA UI / HELPERS ---
-        function updateTextPreview() {
-            const cvs = document.getElementById('textPreviewCanvas');
-            const ctx = cvs.getContext('2d');
-            const text = document.getElementById('txtString').value;
-            const size = parseInt(document.getElementById('rngTxtSize').value);
-            const intensity = parseInt(document.getElementById('rngScatter').value);
-            cvs.width = Math.max(600, text.length * (size * 0.7)); cvs.height = size * 3.5; 
-            ctx.fillStyle = "black"; ctx.fillRect(0,0,cvs.width, cvs.height);
-            renderAdvancedEffect(ctx, text, cvs.width/2, cvs.height/3, size, document.getElementById('txtFontFamily').value, currentTextEffect, intensity);
-        }
-
-        function applyTextToWorkspace() {
-            const procCanvas = document.getElementById('procCanvas');
-            const ctx = procCanvas.getContext('2d');
-            const previewCvs = document.getElementById('textPreviewCanvas');
-            
-            procCanvas.width = previewCvs.width * 1.5; procCanvas.height = previewCvs.height * 1.5;
-            
-            // Render en Negro sobre Blanco para detección (Invertido)
-            const tCvs = document.createElement('canvas'); tCvs.width = procCanvas.width; tCvs.height = procCanvas.height;
-            const tCtx = tCvs.getContext('2d');
-            tCtx.fillStyle = "black"; tCtx.fillRect(0,0, tCvs.width, tCvs.height); // Fondo Negro
-            
-            const size = parseInt(document.getElementById('rngTxtSize').value) * 1.5;
-            renderAdvancedEffect(tCtx, document.getElementById('txtString').value, procCanvas.width/2, procCanvas.height/3, size, document.getElementById('txtFontFamily').value, currentTextEffect, parseInt(document.getElementById('rngScatter').value));
-            
-            // Invertir imagen para el procesador de puntos
-            const idata = tCtx.getImageData(0,0,tCvs.width, tCvs.height);
-            for(let i=0; i<idata.data.length; i+=4) {
-                idata.data[i] = 255 - idata.data[i];
-                idata.data[i+1] = 255 - idata.data[i+1];
-                idata.data[i+2] = 255 - idata.data[i+2];
-            }
-            ctx.putImageData(idata, 0, 0);
-
-            canvasWidth = procCanvas.width; canvasHeight = procCanvas.height;
-            closeModal('textToolModal'); document.getElementById('imgInputGroup').style.display = 'none';
-            generatePoints(ctx); renderSVGPreview(); updateLabels();
-            document.getElementById('btnOpenEditor').disabled = false;
+            } else { for(let i=0; i<seg.length; i+=step) globalPoints.push(seg[i]); }
         }
 
         function renderSVGPreview() {
             const r = parseFloat(document.getElementById('radius').value);
-            let svg = `<svg viewBox="0 0 ${canvasWidth} ${canvasHeight}" style="overflow:visible;"><g fill="black">`;
+            let svg = `<svg viewBox="0 0 ${canvasWidth} ${canvasHeight}" style="max-height:100%; max-width:100%;"><g fill="black">`;
             globalPoints.forEach(p => { svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" />`; });
             svg += `</g></svg>`;
             document.getElementById('svgContent').innerHTML = svg;
         }
 
-        function processImage() {
-            // Lógica idéntica a la anterior, solo llama a generatePoints
-            const c = document.getElementById('procCanvas'); const ctx = c.getContext('2d');
-            // ... (Carga de imagen estándar)
-            // Simulación rápida si ya hay canvas cargado:
-            if(canvasWidth > 0) { generatePoints(ctx); renderSVGPreview(); }
+        // --- EDITOR CANVAS (ZOOM TÁCTIL MEJORADO) ---
+        const editorCanvas = document.getElementById('editorCanvas');
+        const ctxEdit = editorCanvas.getContext('2d');
+        let editTool = 'delete'; let selectedPointIdx = -1; let editorScale = 1; let editorOffsetX = 0; let editorOffsetY = 0; 
+        let isDragging = false; let lastMouse = {x:0, y:0};
+        // Variables para control de zoom táctil
+        let initialPinchDistance = 0; let isPinching = false;
+
+        function openEditor() {
+            backupPoints = JSON.parse(JSON.stringify(globalPoints)); 
+            document.getElementById('editorOverlay').style.display = 'flex';
+            const rect = document.getElementById('visualWrapper').getBoundingClientRect();
+            editorCanvas.width = rect.width; editorCanvas.height = rect.height;
+            editorScale = Math.min(editorCanvas.width / canvasWidth, editorCanvas.height / canvasHeight) * 0.9;
+            editorOffsetX = (editorCanvas.width - canvasWidth * editorScale) / 2;
+            editorOffsetY = (editorCanvas.height - canvasHeight * editorScale) / 2;
+            requestAnimationFrame(drawEditorLoop);
         }
 
-        // --- LISTENERS BASE ---
-        window.addEventListener('message', (e) => { if(e.data.action === 'applyEffect') { currentTextEffect = e.data.effectName; updateTextPreview(); } });
-        document.querySelectorAll('.param-input').forEach(i => i.addEventListener('input', () => { updateLabels(); }));
-        function updateLabels() { /* ...Misma lógica V3... */ }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function openTextTool() { document.getElementById('textToolModal').style.display = 'flex'; updateTextPreview(); }
-        function openEditor() { /* ...Misma lógica V3... */ document.getElementById('editorOverlay').style.display = 'flex'; requestAnimationFrame(drawEditorLoop); }
-        // Editor canvas loop, setTool, nudge, etc... (Mantener funciones V3, omitidas aquí para no exceder limite, pero requeridas para funcionar).
+        function setTool(t) { editTool = t; selectedPointIdx = -1; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.querySelector(`.tool-btn.${t}`).classList.add('active'); document.getElementById('dpad').style.display = (t === 'move') ? 'grid' : 'none'; drawEditorLoop(); }
         
-        // --- EDITOR CANVAS LOOP (Requerido para que funcione el botón) ---
-        const editorCanvas = document.getElementById('editorCanvas'); const ctxEdit = editorCanvas.getContext('2d');
-        let editTool = 'delete'; let editorScale=1; let editorOffsetX=0; let editorOffsetY=0;
         function drawEditorLoop() {
-            ctxEdit.clearRect(0,0,editorCanvas.width, editorCanvas.height);
+            ctxEdit.clearRect(0, 0, editorCanvas.width, editorCanvas.height);
             ctxEdit.save(); ctxEdit.translate(editorOffsetX, editorOffsetY); ctxEdit.scale(editorScale, editorScale);
-            ctxEdit.fillStyle="white"; ctxEdit.fillRect(0,0,canvasWidth, canvasHeight);
+            ctxEdit.fillStyle = "white"; ctxEdit.fillRect(0,0, canvasWidth, canvasHeight);
             const r = parseFloat(document.getElementById('radius').value);
-            globalPoints.forEach(p => { ctxEdit.beginPath(); ctxEdit.arc(p.x, p.y, r, 0, Math.PI*2); ctxEdit.fill(); });
+            for(let i=0; i<globalPoints.length; i++) {
+                const p = globalPoints[i];
+                ctxEdit.beginPath(); ctxEdit.arc(p.x, p.y, r, 0, Math.PI*2);
+                if (editTool === 'delete') { ctxEdit.fillStyle = "black"; ctxEdit.fill(); ctxEdit.lineWidth = r/2; ctxEdit.strokeStyle = "red"; ctxEdit.stroke(); } 
+                else if (editTool === 'move' && i === selectedPointIdx) { ctxEdit.fillStyle = "#2196F3"; ctxEdit.fill(); ctxEdit.strokeStyle = "#2196F3"; ctxEdit.lineWidth = 2; ctxEdit.stroke(); }
+                else { ctxEdit.fillStyle = "black"; ctxEdit.fill(); }
+            }
             ctxEdit.restore();
         }
-        window.setTool = (t) => { editTool = t; };
-        window.discardChanges = () => { document.getElementById('editorOverlay').style.display='none'; };
-        window.confirmChanges = () => { document.getElementById('editorOverlay').style.display='none'; document.getElementById('exportModal').style.display='flex'; };
-        window.finalizeExport = (fmt) => { alert("Exportando " + fmt + "..."); closeModal('exportModal'); };
+
+        function screenToWorld(sx, sy) { return { x: (sx - editorOffsetX) / editorScale, y: (sy - editorOffsetY) / editorScale }; }
+        
+        // Eventos de Ratón (Pan y Zoom con rueda)
+        editorCanvas.addEventListener('mousedown', startPan); editorCanvas.addEventListener('mousemove', movePan); editorCanvas.addEventListener('mouseup', endPan);
+        editorCanvas.addEventListener('wheel', (e) => {
+            e.preventDefault(); const s = (e.deltaY < 0) ? 1.1 : 0.9;
+            const rect = editorCanvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
+            editorOffsetX = mx - (mx - editorOffsetX) * s; editorOffsetY = my - (my - editorOffsetY) * s;
+            editorScale *= s; drawEditorLoop();
+        });
+        
+        // Eventos Táctiles (Pan y Zoom con pellizco)
+        editorCanvas.addEventListener('touchstart', (e)=>{ 
+            if(e.touches.length === 1) { startPan(e.touches[0]); }
+            else if (e.touches.length === 2) {
+                isPinching = true;
+                initialPinchDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            }
+        });
+        editorCanvas.addEventListener('touchmove', (e)=>{ 
+            e.preventDefault(); 
+            if(e.touches.length === 1 && !isPinching) { movePan(e.touches[0]); }
+            else if (isPinching && e.touches.length === 2) {
+                const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                const s = currentDistance / initialPinchDistance;
+                const rect = editorCanvas.getBoundingClientRect();
+                // Punto medio del pellizco para hacer zoom desde ahí
+                const mx = (e.touches[0].pageX + e.touches[1].pageX) / 2 - rect.left;
+                const my = (e.touches[0].pageY + e.touches[1].pageY) / 2 - rect.top;
+                editorOffsetX = mx - (mx - editorOffsetX) * s;
+                editorOffsetY = my - (my - editorOffsetY) * s;
+                editorScale *= s;
+                initialPinchDistance = currentDistance; // Actualizar para el siguiente frame
+                drawEditorLoop();
+            }
+        });
+        editorCanvas.addEventListener('touchend', (e)=>{ 
+            if (isPinching && e.touches.length < 2) { isPinching = false; }
+            else if (e.touches.length === 0) { endPan(e.changedTouches[0]); }
+        });
+
+        let startClickTime = 0; let didMove = false;
+        function startPan(e) { isDragging = true; didMove = false; startClickTime = Date.now(); const rect = editorCanvas.getBoundingClientRect(); lastMouse = { x: (e.clientX || e.pageX) - rect.left, y: (e.clientY || e.pageY) - rect.top }; }
+        function movePan(e) { if (!isDragging) return; const rect = editorCanvas.getBoundingClientRect(); const x = (e.clientX || e.pageX) - rect.left; const y = (e.clientY || e.pageY) - rect.top; if (Math.abs(x - lastMouse.x) > 2 || Math.abs(y - lastMouse.y) > 2) didMove = true; editorOffsetX += (x - lastMouse.x); editorOffsetY += (y - lastMouse.y); lastMouse = {x, y}; drawEditorLoop(); }
+        function endPan(e) { isDragging = false; const timeDiff = Date.now() - startClickTime; if (timeDiff < 300 && !didMove) { const rect = editorCanvas.getBoundingClientRect(); handleToolClick((e.clientX || e.pageX) - rect.left, (e.clientY || e.pageY) - rect.top); } }
+
+        function handleToolClick(sx, sy) {
+            const wPos = screenToWorld(sx, sy); const r = parseFloat(document.getElementById('radius').value);
+            let hitIdx = -1; let minDist = r * 2.5; // Tolerancia de clic basada en el radio
+            for(let i=0; i<globalPoints.length; i++) { const d = Math.hypot(globalPoints[i].x - wPos.x, globalPoints[i].y - wPos.y); if (d < minDist) { minDist = d; hitIdx = i; } }
+            if (editTool === 'delete' && hitIdx !== -1) { globalPoints.splice(hitIdx, 1); manualEditsMade = true; } 
+            else if (editTool === 'add' && hitIdx === -1) { globalPoints.push({x: wPos.x, y: wPos.y}); manualEditsMade = true; } 
+            else if (editTool === 'move') { if (hitIdx !== -1) selectedPointIdx = hitIdx; else if (selectedPointIdx !== -1) { globalPoints[selectedPointIdx].x = wPos.x; globalPoints[selectedPointIdx].y = wPos.y; manualEditsMade = true; } }
+            drawEditorLoop();
+        }
+
+        window.nudge = (dx, dy) => { if (selectedPointIdx !== -1) { globalPoints[selectedPointIdx].x += dx; globalPoints[selectedPointIdx].y += dy; manualEditsMade = true; drawEditorLoop(); } };
+        window.discardChanges = () => { if(confirm("¿Descartar?")) { globalPoints = backupPoints; document.getElementById('editorOverlay').style.display = 'none'; manualEditsMade = false; renderSVGPreview(); } };
+        window.confirmChanges = () => { if(!document.getElementById('projectName').value.trim()) return alert("Pon nombre al proyecto."); document.getElementById('editorOverlay').style.display = 'none'; renderSVGPreview(); document.getElementById('exportModal').style.display = 'flex'; };
+
+        // --- EXPORTACIÓN ---
+        window.finalizeExport = async (format) => {
+            const name = document.getElementById('projectName').value.trim() || "diseño";
+            const svgString = document.getElementById('svgContent').innerHTML;
+            let blob = null; let ext = "";
+            if (format === 'svg') { blob = new Blob([svgString], {type: "image/svg+xml"}); ext = ".svg"; } 
+            else if (format === 'plt') { blob = new Blob([generatePLT()], {type: "text/plain"}); ext = ".plt"; }
+            else if (format === 'ai') { blob = new Blob([generateEPS()], {type: "application/postscript"}); ext = ".ai"; }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url; a.download = name + "_JMVN" + ext; a.click();
+            if (window.saveToFirebase) await window.saveToFirebase(globalPoints, svgString, format);
+            closeModal('exportModal'); alert(`✅ Archivo ${ext} listo.`);
+        };
+
+        function generatePLT() {
+            const scale = (parseFloat(document.getElementById('realWidthCm').value) * 10 / canvasWidth) * 40;
+            const rPlt = (parseFloat(document.getElementById('radius').value) * scale).toFixed(0);
+            let plt = "IN;PU;"; 
+            globalPoints.forEach(p => { plt += `PU${(p.x * scale).toFixed(0)},${(-p.y * scale).toFixed(0)};CI${rPlt};`; });
+            return plt + "PU0,0;IN;";
+        }
+
+        function generateEPS() {
+            const scale = (parseFloat(document.getElementById('realWidthCm').value) * 28.3465) / canvasWidth;
+            const h_pt = canvasHeight * scale; const r = parseFloat(document.getElementById('radius').value) * scale;
+            let eps = `%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 ${(canvasWidth*scale).toFixed(2)} ${h_pt.toFixed(2)}\n%%Creator: JMVN\n/c { 0 360 arc fill } def\n0 setgray\n`; 
+            globalPoints.forEach(p => { eps += `${(p.x * scale).toFixed(2)} ${(h_pt - (p.y * scale)).toFixed(2)} ${r.toFixed(2)} c\n`; });
+            return eps + `%%EOF`;
+        }
     </script>
 </body>
 </html>
